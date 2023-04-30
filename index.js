@@ -83,26 +83,53 @@ function processHumanCoordinate(input) {
   displayBoard(board);
 }
 
-function getUnbeatableAiCoordinates(map) {
+function calcAiIndex(arr) {
   let count = 0;
   let oneEmptyStr = false;
   let index;
+  count = arr.reduce((acc, curr) => (curr === "pets" ? acc + 1 : acc), 0);
+  oneEmptyStr = arr.some((element) => element === "");
+  index = arr.indexOf("");
+  if (count === 2 && oneEmptyStr) {
+    return index;
+  }
+  return undefined;
+}
+
+function getUnbeatableAiCoordinates(map) {
+  let mainDiagonal = [];
+  let secondaryDiagonal = [];
+
   for (let i = 0; i < map.length; i++) {
-    count = map[i].reduce((acc, curr) => (curr === "pets" ? acc + 1 : acc), 0);
-    oneEmptyStr = map[i].some((element) => element === "");
-    index = map[i].indexOf("");
-    if (count === 2 && oneEmptyStr) {
-      return { x: i, y: index };
+    if (calcAiIndex(map[i]) !== undefined) {
+      return { x: i, y: calcAiIndex(map[i]) };
+    }
+  }
+  for (let i = 0; i < map.length; i++) {
+    const column = map.map((row) => row[i]);
+    if (calcAiIndex(column) !== undefined) {
+      return { x: calcAiIndex(column), y: i };
     }
   }
 
   for (let i = 0; i < map.length; i++) {
-    const column = map.map((row) => row[i]);
-    count = column.reduce((acc, curr) => (curr === "pets" ? acc + 1 : acc), 0);
-    oneEmptyStr = column.some((element) => element === "");
-    if (count === 2 && oneEmptyStr) {
-      return { x: i, y: index };
-    }
+    mainDiagonal.push(map[i][i]);
+    secondaryDiagonal.push(map[i][map.length - 1 - i]);
+  }
+  console.log("main Diag", mainDiagonal);
+  console.log("sec Diag", secondaryDiagonal);
+  console.log("main index", calcAiIndex(mainDiagonal));
+  console.log("second index", calcAiIndex(secondaryDiagonal));
+  if (calcAiIndex(mainDiagonal) !== undefined) {
+    console.log("Main Diagonal");
+    return { x: calcAiIndex(mainDiagonal), y: calcAiIndex(mainDiagonal) };
+  }
+  if (calcAiIndex(secondaryDiagonal) !== undefined) {
+    console.log("Secondary Diagonal");
+    return {
+      x: calcAiIndex(secondaryDiagonal),
+      y: board.length - 1 - calcAiIndex(secondaryDiagonal),
+    };
   }
   return undefined;
 }
@@ -110,11 +137,13 @@ function getUnbeatableAiCoordinates(map) {
 function processAICoordinate() {
   if (gameTurn % 2 === 0) {
     currentPlayer = "diamond";
+    currentPlayerXO = "X";
     displayMessage("Player O's turn");
     setHTMLvisibilityForInputHumanCoordinates(false);
     setHTMLvisibilityForInputAiCoordinatesInput(true);
   } else {
     currentPlayer = "pets";
+    currentPlayerXO = "O";
     displayMessage("Player X's turn");
     setHTMLvisibilityForInputHumanCoordinates(true);
     setHTMLvisibilityForInputAiCoordinatesInput(false);
@@ -138,6 +167,7 @@ function processAICoordinate() {
     }
     let random = Math.floor(Math.random() * emptyBoard.length);
     board[emptyBoard[random].x][emptyBoard[random].y] = currentPlayer;
+    console.log("random");
   }
 
   gameTurn++;
@@ -153,14 +183,15 @@ function processAICoordinate() {
 }
 
 function resetGame() {
-  resetBoard();
-  displayBoard(board);
-  gameTurn = 0;
-  setHTMLvisibilityForInputGameMode(true);
-  setHTMLvisibilityForInputHumanCoordinates(false);
-  setHTMLvisibilityForInputAiCoordinatesInput(false);
-  setHTMLvisibilityForButtonLabeledReset(false);
-  displayMessage("Player X's turn");
+  // resetBoard();
+  // displayBoard(board);
+  // gameTurn = 0;
+  // setHTMLvisibilityForInputGameMode(true);
+  // setHTMLvisibilityForInputHumanCoordinates(false);
+  // setHTMLvisibilityForInputAiCoordinatesInput(false);
+  // setHTMLvisibilityForButtonLabeledReset(false);
+  // displayMessage("Player X's turn");
+  location.reload();
 }
 function extractCoordinates(input) {
   switch (input) {
