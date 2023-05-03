@@ -17,16 +17,24 @@ function setGameMode(selectedValue) {
     case "human-human":
       isPlayerXHuman = true;
       isPlayerYHuman = true;
+      setHTMLvisibilityForInputHumanCoordinates(true);
+      setHTMLvisibilityForInputAiCoordinatesInput(false);
       break;
     case "human-ai":
       isPlayerXHuman = true;
       isPlayerYHuman = false;
+      setHTMLvisibilityForInputHumanCoordinates(true);
+      setHTMLvisibilityForInputAiCoordinatesInput(false);
+      break;
+    case "ai-ai":
+      isPlayerXHuman = false;
+      isPlayerYHuman = false;
+      setHTMLvisibilityForInputHumanCoordinates(false);
+      setHTMLvisibilityForInputAiCoordinatesInput(true);
       break;
   }
   resetBoard();
   setHTMLvisibilityForInputGameMode(false);
-  setHTMLvisibilityForInputHumanCoordinates(true);
-  setHTMLvisibilityForInputAiCoordinatesInput(false);
   setHTMLvisibilityForButtonLabeledReset(true);
   displayMessage("Player X's turn");
 }
@@ -51,6 +59,9 @@ function processHumanCoordinate(input) {
     if (!isPlayerYHuman && isInputValid(input)) {
       setHTMLvisibilityForInputHumanCoordinates(false);
       setHTMLvisibilityForInputAiCoordinatesInput(true);
+    } else {
+      setHTMLvisibilityForInputHumanCoordinates(true);
+      setHTMLvisibilityForInputAiCoordinatesInput(false);
     }
   } else {
     currentPlayer = "pets";
@@ -59,6 +70,9 @@ function processHumanCoordinate(input) {
     if (!isPlayerYHuman) {
       setHTMLvisibilityForInputHumanCoordinates(false);
       setHTMLvisibilityForInputAiCoordinatesInput(true);
+    } else {
+      setHTMLvisibilityForInputHumanCoordinates(true);
+      setHTMLvisibilityForInputAiCoordinatesInput(false);
     }
   }
 
@@ -83,11 +97,11 @@ function processHumanCoordinate(input) {
   displayBoard(board);
 }
 
-function calcAiIndex(arr) {
+function calcAiIndex(arr, currentPlayer) {
   let count = 0;
   let oneEmptyStr = false;
   let index;
-  count = arr.reduce((acc, curr) => (curr === "pets" ? acc + 1 : acc), 0);
+  count = arr.reduce((acc, curr) => (curr === currentPlayer ? acc + 1 : acc), 0);
   oneEmptyStr = arr.some((element) => element === "");
   index = arr.indexOf("");
   if (count === 2 && oneEmptyStr) {
@@ -96,40 +110,74 @@ function calcAiIndex(arr) {
   return undefined;
 }
 
-function getUnbeatableAiCoordinates(map) {
+function findEasyWinMove(map, currentPlayer) {
   let mainDiagonal = [];
   let secondaryDiagonal = [];
-
   for (let i = 0; i < map.length; i++) {
-    if (calcAiIndex(map[i]) !== undefined) {
-      return { x: i, y: calcAiIndex(map[i]) };
+    if (calcAiIndex(map[i], currentPlayer) !== undefined) {
+      return { x: i, y: calcAiIndex(map[i], currentPlayer) };
     }
   }
   for (let i = 0; i < map.length; i++) {
     const column = map.map((row) => row[i]);
-    if (calcAiIndex(column) !== undefined) {
-      return { x: calcAiIndex(column), y: i };
+    if (calcAiIndex(column, currentPlayer) !== undefined) {
+      return { x: calcAiIndex(column, currentPlayer), y: i };
     }
   }
-
   for (let i = 0; i < map.length; i++) {
     mainDiagonal.push(map[i][i]);
     secondaryDiagonal.push(map[i][map.length - 1 - i]);
   }
-  console.log("main Diag", mainDiagonal);
-  console.log("sec Diag", secondaryDiagonal);
-  console.log("main index", calcAiIndex(mainDiagonal));
-  console.log("second index", calcAiIndex(secondaryDiagonal));
-  if (calcAiIndex(mainDiagonal) !== undefined) {
-    console.log("Main Diagonal");
-    return { x: calcAiIndex(mainDiagonal), y: calcAiIndex(mainDiagonal) };
+  if (calcAiIndex(mainDiagonal, currentPlayer) !== undefined) {
+    return { x: calcAiIndex(mainDiagonal, currentPlayer), y: calcAiIndex(mainDiagonal, currentPlayer) };
   }
-  if (calcAiIndex(secondaryDiagonal) !== undefined) {
-    console.log("Secondary Diagonal");
+  if (calcAiIndex(secondaryDiagonal, currentPlayer) !== undefined) {
     return {
-      x: calcAiIndex(secondaryDiagonal),
-      y: board.length - 1 - calcAiIndex(secondaryDiagonal),
+      x: calcAiIndex(secondaryDiagonal, currentPlayer),
+      y: board.length - 1 - calcAiIndex(secondaryDiagonal, currentPlayer),
     };
+  }
+  return undefined;
+}
+
+function findMiddleBlock(map) {
+  if(map[1][1] === "") {
+    return {x:1, y:1}
+  }
+  return undefined;
+}
+
+function findCorners(map) {
+  let corners = [
+    {x: 0, y: 0}, 
+    {x: 0, y: 2}, 
+    {x: 2, y: 0}, 
+    {x: 2, y: 2}];
+  let emptyCorners = [];
+  for(let corner of corners) {
+    if (map[corner.x][corner.y] === "") {
+      emptyCorners.push(corner);
+    }
+  }
+  if (emptyCorners.length > 0) {
+    return emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
+  }
+  return undefined;
+}
+
+function getUnbeatableAiCoordinates(map) {
+  if (findEasyWinMove(map, "pets") !== undefined) {
+      return findEasyWinMove(map, "pets");
+  } else if (findEasyWinMove(map, "diamond") !== undefined) {
+      return findEasyWinMove(map, "diamond");
+  }
+
+  if(findMiddleBlock(map)) {
+    return findMiddleBlock(map);
+  }
+  let corner = findCorners(map);
+  if(corner) {
+    return corner;
   }
   return undefined;
 }
@@ -139,18 +187,22 @@ function processAICoordinate() {
     currentPlayer = "diamond";
     currentPlayerXO = "X";
     displayMessage("Player O's turn");
-    setHTMLvisibilityForInputHumanCoordinates(false);
-    setHTMLvisibilityForInputAiCoordinatesInput(true);
   } else {
     currentPlayer = "pets";
     currentPlayerXO = "O";
-    displayMessage("Player X's turn");
+    displayMessage("Player X's turn"); 
+  }
+  if (!isPlayerXHuman) {
+    setHTMLvisibilityForInputHumanCoordinates(false);
+    setHTMLvisibilityForInputAiCoordinatesInput(true);
+  } else {
     setHTMLvisibilityForInputHumanCoordinates(true);
     setHTMLvisibilityForInputAiCoordinatesInput(false);
   }
-  if (getUnbeatableAiCoordinates(board)) {
-    let x = getUnbeatableAiCoordinates(board).x;
-    let y = getUnbeatableAiCoordinates(board).y;
+  let unbeatable = getUnbeatableAiCoordinates(board);
+  if (unbeatable) {
+    let x = unbeatable.x;
+    let y = unbeatable.y;
     board[x][y] = currentPlayer;
   } else {
     let emptyBoard = [];
@@ -167,7 +219,6 @@ function processAICoordinate() {
     }
     let random = Math.floor(Math.random() * emptyBoard.length);
     board[emptyBoard[random].x][emptyBoard[random].y] = currentPlayer;
-    console.log("random");
   }
 
   gameTurn++;
