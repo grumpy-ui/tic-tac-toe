@@ -101,7 +101,10 @@ function calcAiIndex(arr, currentPlayer) {
   let count = 0;
   let oneEmptyStr = false;
   let index;
-  count = arr.reduce((acc, curr) => (curr === currentPlayer ? acc + 1 : acc), 0);
+  count = arr.reduce(
+    (acc, curr) => (curr === currentPlayer ? acc + 1 : acc),
+    0
+  );
   oneEmptyStr = arr.some((element) => element === "");
   index = arr.indexOf("");
   if (count === 2 && oneEmptyStr) {
@@ -129,7 +132,10 @@ function findEasyWinMove(map, currentPlayer) {
     secondaryDiagonal.push(map[i][map.length - 1 - i]);
   }
   if (calcAiIndex(mainDiagonal, currentPlayer) !== undefined) {
-    return { x: calcAiIndex(mainDiagonal, currentPlayer), y: calcAiIndex(mainDiagonal, currentPlayer) };
+    return {
+      x: calcAiIndex(mainDiagonal, currentPlayer),
+      y: calcAiIndex(mainDiagonal, currentPlayer),
+    };
   }
   if (calcAiIndex(secondaryDiagonal, currentPlayer) !== undefined) {
     return {
@@ -141,23 +147,27 @@ function findEasyWinMove(map, currentPlayer) {
 }
 
 function findMiddleBlock(map) {
-  if(map[1][1] === "") {
-    return {x:1, y:1}
+  if (map[1][1] === "") {
+    return { x: 1, y: 1 };
   }
   return undefined;
 }
 
 function findCorners(map) {
   let corners = [
-    {x: 0, y: 0}, 
-    {x: 0, y: 2}, 
-    {x: 2, y: 0}, 
-    {x: 2, y: 2}];
+    { x: 0, y: 0 },
+    { x: 0, y: 2 },
+    { x: 2, y: 0 },
+    { x: 2, y: 2 },
+  ];
   let emptyCorners = [];
-  for(let corner of corners) {
+  for (let corner of corners) {
     if (map[corner.x][corner.y] === "") {
       emptyCorners.push(corner);
     }
+  }
+  if (findOppositeCorner(map)) {
+    return findOppositeCorner(map);
   }
   if (emptyCorners.length > 0) {
     return emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
@@ -165,18 +175,43 @@ function findCorners(map) {
   return undefined;
 }
 
+function findOppositeCorner(map) {
+  let corners = [
+    { x: 0, y: 0, opposite: { x: 2, y: 2 } },
+    { x: 0, y: 2, opposite: { x: 2, y: 0 } },
+  ];
+  for (const corner of corners) {
+    const { x, y, opposite } = corner;
+    if (map[x][y] === "diamond" && map[opposite.x][opposite.y] === "diamond") {
+      let sides = [
+        { x: 0, y: 1 },
+        { x: 1, y: 0 },
+        { x: 1, y: 2 },
+        { x: 2, y: 1 },
+      ];
+      for (let side of sides) {
+        if (map[side.x][side.y] === "") {
+          return side;
+          break;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
 function getUnbeatableAiCoordinates(map) {
   if (findEasyWinMove(map, "pets") !== undefined) {
-      return findEasyWinMove(map, "pets");
+    return findEasyWinMove(map, "pets");
   } else if (findEasyWinMove(map, "diamond") !== undefined) {
-      return findEasyWinMove(map, "diamond");
+    return findEasyWinMove(map, "diamond");
   }
 
-  if(findMiddleBlock(map)) {
+  if (findMiddleBlock(map)) {
     return findMiddleBlock(map);
   }
   let corner = findCorners(map);
-  if(corner) {
+  if (corner) {
     return corner;
   }
   return undefined;
@@ -190,7 +225,7 @@ function processAICoordinate() {
   } else {
     currentPlayer = "pets";
     currentPlayerXO = "O";
-    displayMessage("Player X's turn"); 
+    displayMessage("Player X's turn");
   }
   if (!isPlayerXHuman) {
     setHTMLvisibilityForInputHumanCoordinates(false);
