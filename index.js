@@ -5,7 +5,7 @@ let board;
 let isPlayerXHuman;
 let isPlayerYHuman;
 
-let gameEndHideEl = function () {
+function gameEndHideEl() {
   setHTMLvisibilityForInputGameMode(false);
   setHTMLvisibilityForInputHumanCoordinates(false);
   setHTMLvisibilityForInputAiCoordinatesInput(false);
@@ -51,32 +51,33 @@ function isInputValid(string) {
   }
   return validInt && validStr;
 }
-function processHumanCoordinate(input) {
+
+function updateHTMLvisibility () {
+  const isCurrentPlayerHuman = currentPlayerXO !== "X"? isPlayerXHuman : isPlayerYHuman;
+  setHTMLvisibilityForInputHumanCoordinates(isCurrentPlayerHuman);
+  setHTMLvisibilityForInputAiCoordinatesInput(!isCurrentPlayerHuman);
+}
+
+function setCurrentPlayer() {
   if (gameTurn % 2 === 0) {
     currentPlayer = "diamond";
     currentPlayerXO = "X";
     displayMessage("Player O's turn");
-    if (!isPlayerYHuman && isInputValid(input)) {
-      setHTMLvisibilityForInputHumanCoordinates(false);
-      setHTMLvisibilityForInputAiCoordinatesInput(true);
-    } else {
-      setHTMLvisibilityForInputHumanCoordinates(true);
-      setHTMLvisibilityForInputAiCoordinatesInput(false);
-    }
   } else {
     currentPlayer = "pets";
     currentPlayerXO = "O";
     displayMessage("Player X's turn");
-    if (!isPlayerYHuman) {
-      setHTMLvisibilityForInputHumanCoordinates(false);
-      setHTMLvisibilityForInputAiCoordinatesInput(true);
-    } else {
+  }
+}
+
+function processHumanCoordinate(input) {
+  setCurrentPlayer();
+  updateHTMLvisibility();
+  let coordinates = extractCoordinates(input);
+  if (!isInputValid(input)) {
       setHTMLvisibilityForInputHumanCoordinates(true);
       setHTMLvisibilityForInputAiCoordinatesInput(false);
-    }
-  }
-
-  let coordinates = extractCoordinates(input);
+  } 
   if (!board[coordinates.x][coordinates.y]) {
     board[coordinates.x][coordinates.y] = currentPlayer;
     gameTurn++;
@@ -95,6 +96,7 @@ function processHumanCoordinate(input) {
     gameEndHideEl();
   }
   displayBoard(board);
+  
 }
 
 function calcAiIndex(arr, currentPlayer) {
@@ -218,22 +220,8 @@ function getUnbeatableAiCoordinates(map) {
 }
 
 function processAICoordinate() {
-  if (gameTurn % 2 === 0) {
-    currentPlayer = "diamond";
-    currentPlayerXO = "X";
-    displayMessage("Player O's turn");
-  } else {
-    currentPlayer = "pets";
-    currentPlayerXO = "O";
-    displayMessage("Player X's turn");
-  }
-  if (!isPlayerXHuman) {
-    setHTMLvisibilityForInputHumanCoordinates(false);
-    setHTMLvisibilityForInputAiCoordinatesInput(true);
-  } else {
-    setHTMLvisibilityForInputHumanCoordinates(true);
-    setHTMLvisibilityForInputAiCoordinatesInput(false);
-  }
+  setCurrentPlayer();
+  updateHTMLvisibility();
   let unbeatable = getUnbeatableAiCoordinates(board);
   if (unbeatable) {
     let x = unbeatable.x;
@@ -258,6 +246,7 @@ function processAICoordinate() {
 
   gameTurn++;
   displayBoard(board);
+  
   const winningPlayer = getWinningPlayer(board);
   if (winningPlayer) {
     displayMessage(`Player ${currentPlayerXO} has won !`);
@@ -325,7 +314,6 @@ function getWinningPlayer(board) {
       return "O";
     }
   }
-
   //Checks if there is a vertical line
   for (let i = 0; i < board.length; i++) {
     const column = board.map((row) => row[i]);
@@ -338,7 +326,6 @@ function getWinningPlayer(board) {
       return "O";
     }
   }
-
   //Checks if there is a diagonal line
   let mainDiagonal = [];
   let secondaryDiagonal = [];
