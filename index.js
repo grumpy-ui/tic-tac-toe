@@ -10,7 +10,7 @@ function gameEndHideEl() {
   setHTMLvisibilityForInputHumanCoordinates(false);
   setHTMLvisibilityForInputAiCoordinatesInput(false);
   setHTMLvisibilityForButtonLabeledReset(true);
-};
+}
 
 function setGameMode(selectedValue) {
   switch (selectedValue) {
@@ -40,20 +40,26 @@ function setGameMode(selectedValue) {
 }
 
 function isInputValid(string) {
-  const validInt = parseInt(string.substring(1)) < 4 ? true : false;
-  let validStr = false;
-  if (
-    string.substring(0, 1) === "A" ||
-    string.substring(0, 1) === "B" ||
-    string.substring(0, 1) === "C"
-  ) {
-    validStr = true;
-  }
-  return validInt && validStr;
+
+  const inputLength = string.length === 2
+  const validStr = ["A", "B", "C"].includes(string.charAt(0))
+  const validInt = ["1", "2", "3"].includes(string.charAt(1))
+  // const validInt = parseInt(string.substring(1)) < 4 ? true : false;
+  // let validStr = false;
+  // if (
+  //   string.substring(0, 1) === "A" ||
+  //   string.substring(0, 1) === "B" ||
+  //   string.substring(0, 1) === "C"
+  // ) {
+  //   validStr = true;
+  // }
+  // return validInt && validStr;
+  return inputLength && validStr && validInt
 }
 
-function updateHTMLvisibility () {
-  const isCurrentPlayerHuman = currentPlayerXO !== "X"? isPlayerXHuman : isPlayerYHuman;
+function updateHTMLvisibility() {
+  const isCurrentPlayerHuman =
+    currentPlayerXO !== "X" ? isPlayerXHuman : isPlayerYHuman;
   setHTMLvisibilityForInputHumanCoordinates(isCurrentPlayerHuman);
   setHTMLvisibilityForInputAiCoordinatesInput(!isCurrentPlayerHuman);
 }
@@ -75,9 +81,9 @@ function processHumanCoordinate(input) {
   updateHTMLvisibility();
   let coordinates = extractCoordinates(input);
   if (!isInputValid(input)) {
-      setHTMLvisibilityForInputHumanCoordinates(true);
-      setHTMLvisibilityForInputAiCoordinatesInput(false);
-  } 
+    setHTMLvisibilityForInputHumanCoordinates(true);
+    setHTMLvisibilityForInputAiCoordinatesInput(false);
+  }
   if (!board[coordinates.x][coordinates.y]) {
     board[coordinates.x][coordinates.y] = currentPlayer;
     gameTurn++;
@@ -96,7 +102,6 @@ function processHumanCoordinate(input) {
     gameEndHideEl();
   }
   displayBoard(board);
-  
 }
 
 function calcAiIndex(arr, currentPlayer) {
@@ -246,10 +251,11 @@ function processAICoordinate() {
 
   gameTurn++;
   displayBoard(board);
-  
+
   const winningPlayer = getWinningPlayer(board);
   if (winningPlayer) {
     displayMessage(`Player ${currentPlayerXO} has won !`);
+    gameEndHideEl()
   }
   if (gameTurn === 9 && !winningPlayer) {
     displayMessage("It's a tie!");
@@ -348,3 +354,15 @@ function getWinningPlayer(board) {
 
   return undefined;
 }
+
+document.getElementById("inputBox").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    processHumanCoordinate(event.target.value);
+    event.target.value = '';
+  }
+});
+
+document.getElementById("aiButton").addEventListener("click", function () {
+  processAICoordinate();
+});
