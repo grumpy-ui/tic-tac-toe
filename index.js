@@ -357,12 +357,6 @@ function getWinningPlayer(board) {
 
 document.getElementById("inputBox").addEventListener("keydown", function (event) {
   if (event.key === "Enter") {
-    event.preventDefault();
-    processHumanCoordinate(event.target.value);
     event.target.value = '';
   }
-});
-
-document.getElementById("aiButton").addEventListener("click", function () {
-  processAICoordinate();
 });
